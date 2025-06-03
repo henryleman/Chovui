@@ -72,6 +72,15 @@
         return guesses;
       };
 
+      let chanLeDuDoan = "";
+      if (evenCount > oddCount) {
+        chanLeDuDoan = "⏩ Dự đoán: Có khả năng tiếp tục ra nhiều **số chẵn** hơn.";
+      } else if (oddCount > evenCount) {
+        chanLeDuDoan = "⏩ Dự đoán: Có khả năng tiếp tục ra nhiều **số lẻ** hơn.";
+      } else {
+        chanLeDuDoan = "⏩ Dự đoán: Số chẵn và lẻ xuất hiện gần bằng nhau — chưa rõ xu hướng.";
+      }
+
       const outputHTML = `
         <h2>Kết Quả Phân Tích:</h2>
         <p><strong>5 số đuôi được dự đoán tiếp theo (loại trừ 3 số cuối cùng dòng gần nhất):</strong> ${guessNext().join(", ")}</p>
@@ -85,6 +94,7 @@
         <h3>Phân Tích Chẵn / Lẻ:</h3>
         <p>Số chẵn: ${evenCount} lần</p>
         <p>Số lẻ: ${oddCount} lần</p>
+        <p><strong>${chanLeDuDoan}</strong></p>
       `;
 
       document.getElementById("output").innerHTML = outputHTML;
