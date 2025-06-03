@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tool Tài Xỉu MD5</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      padding: 20px;
+    }
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    textarea, input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    .result {
+      background: #e9ecef;
+      padding: 10px;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Tool Tài Xỉu MD5</h1>
+    <label>Nhập các seed (mỗi dòng 1 seed):</label>
+    <textarea id="seedInput" rows="5" placeholder="vd: ql*deJ^r9aewBuM"></textarea>
+
+    <label>Nhập vị trí ký tự (ví dụ: 2-1-6):</label>
+    <input type="text" id="positions" placeholder="2-1-6" />
+
+    <label>Cách tính ký tự:</label>
+    <label><input type="radio" name="mode" value="hex" checked /> Dùng giá trị HEX</label><br>
+    <label><input type="radio" name="mode" value="numberOnly" /> Bỏ chữ, chỉ cộng số</label>
+
+    <button onclick="checkTaiXiu()">Kiểm Tra</button>
+
+    <div class="result" id="result"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <script>
+    function md5(string) {
+      return CryptoJS.MD5(string).toString();
+    }
+
+    function checkTaiXiu() {
+      const seeds = document.getElementById("seedInput").value.trim().split("\n");
+      const posStr = document.getElementById("positions").value.trim();
+      const positions = posStr.split("-").map(p => parseInt(p.trim(), 10) - 1);
+      const mode = document.querySelector('input[name="mode"]:checked').value;
+      const resultDiv = document.getElementById("result");
+
+      if (!seeds || positions.some(isNaN)) {
+        resultDiv.innerText = "Vui lòng nhập đầy đủ và đúng định dạng.";
+        return;
+      }
+
+      let output = "";
+
+      for (let seed of seeds) {
+        if (!seed.trim()) continue;
+        const hash = md5(seed);
+        let sum = 0;
+        let charLog = [];
+
+        for (let i of positions) {
+          const char = hash[i] || '0';
+          let val = 0;
+          if (mode === 'numberOnly') {
+            val = isNaN(parseInt(char)) ? 0 : parseInt(char);
+          } else {
+            val = parseInt(char, 16);
+          }
+          charLog.push(`${char}→${val}`);
+          sum += val;
+        }
+
+        const resultNum = sum % 10;
+        const verdict = resultNum >= 5 ? "TÀI" : "XỈU";
+
+        output += `Seed: ${seed}\nHash: ${hash}\nKý tự: ${charLog.join(', ')}\nTổng: ${sum} ⇒ %10 = ${resultNum} ⇒ ${verdict}\n\n`;
+      }
+
+      resultDiv.innerText = output.trim();
+    }
+  </script>
+</body>
+</html>
