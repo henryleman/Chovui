@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phân Tích Xổ Số Đuôi</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f7f7f7; }
+    h1 { color: #333; }
+    textarea { width: 100%; height: 120px; margin-bottom: 10px; }
+    button { padding: 10px 20px; font-size: 16px; }
+    .result { background: #fff; padding: 15px; margin-top: 20px; border-radius: 8px; box-shadow: 0 0 10px #ccc; }
+    ul { padding-left: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Phân Tích Số Đuôi (0-9)</h1>
+  <p>Nhập các dãy số kết quả (mỗi dòng là 1 lượt quay):</p>
+  <textarea id="numbersInput" placeholder="Ví dụ:\n048334\n6111870\n6866768\n..."></textarea>
+  <button onclick="analyzeNumbers()">Phân Tích & Dự Đoán</button>
+  <div class="result" id="output"></div>
+
+  <script>
+    function generateNiceNumbers() {
+      const niceNumbers = new Set();
+
+      // Số kép (11, 22, ... 99)
+      for (let i = 1; i <= 9; i++) {
+        niceNumbers.add(i.toString() + i.toString());
+      }
+
+      // Số tiến (123, 234, ...)
+      for (let i = 1; i <= 7; i++) {
+        niceNumbers.add("" + i + (i + 1) + (i + 2));
+      }
+
+      // Số lùi (321, 432, ...)
+      for (let i = 9; i >= 2; i--) {
+        niceNumbers.add("" + i + (i - 1) + (i - 2));
+      }
+
+      // Số lặp kiểu ABA, ABAA (686, 6886)
+      for (let a = 1; a <= 9; a++) {
+        for (let b = 0; b <= 9; b++) {
+          niceNumbers.add("" + a + b + a);
+          niceNumbers.add("" + a + b + a + a);
+        }
+      }
+
+      // Số có tổng chia hết cho 5
+      while (niceNumbers.size < 100) {
+        const num = Math.floor(Math.random() * 900 + 100).toString();
+        const total = num.split("").reduce((s, d) => s + parseInt(d), 0);
+        if (total % 5 === 0) niceNumbers.add(num);
+      }
+
+      return Array.from(niceNumbers).slice(0, 10);
+    }
+
+    function analyzeNumbers() {
+      const input = document.getElementById("numbersInput").value;
+      const lines = input.split(/\n|\r/).filter(line => line.trim() !== "");
+      const digits = [];
+      let lastDrawTailDigits = [];
+
+      lines.forEach((line, index) => {
+        const cleanDigits = line.trim().split("").filter(ch => !isNaN(ch) && ch !== "").map(Number);
+        digits.push(...cleanDigits);
+
+        if (index === 0) {
+          lastDrawTailDigits = cleanDigits.slice(-3);
+        }
+      });
+
+      if (digits.length === 0) {
+        document.getElementById("output").innerHTML = "Vui lòng nhập các dãy số hợp lệ.";
+        return;
+      }
+
+      const freq = {};
+      let evenCount = 0;
+      let oddCount = 0;
+
+      digits.forEach(d => {
+        freq[d] = (freq[d] || 0) + 1;
+        if (d % 2 === 0) {
+          evenCount++;
+        } else {
+          oddCount++;
+        }
+      });
+
+      const sorted = Object.entries(freq)
+        .filter(([digit]) => !lastDrawTailDigits.includes(Number(digit)))
+        .sort((a, b) => b[1] - a[1]);
+
+      const guessNext = () => {
+        const guesses = [];
+        let i = 0;
+        while (guesses.length < 5 && i < sorted.length) {
+          const candidate = parseInt(sorted[i][0]);
+          if (!guesses.includes(candidate)) {
+            guesses.push(candidate);
+          }
+          i++;
+        }
+        return guesses;
+      };
+
+      let chanLeDuDoan = "";
+      if (evenCount > oddCount) {
+        chanLeDuDoan = "⏩ Dự đoán: Có khả năng tiếp tục ra nhiều **số chẵn** hơn.";
+      } else if (oddCount > evenCount) {
+        chanLeDuDoan = "⏩ Dự đoán: Có khả năng tiếp tục ra nhiều **số lẻ** hơn.";
+      } else {
+        chanLeDuDoan = "⏩ Dự đoán: Số chẵn và lẻ xuất hiện gần bằng nhau — chưa rõ xu hướng.";
+      }
+
+      const niceNumbers = generateNiceNumbers();
+
+      const outputHTML = `
+        <h2>Kết Quả Phân Tích:</h2>
+        <p><strong>5 số đuôi được dự đoán tiếp theo (loại trừ 3 số cuối cùng dòng gần nhất):</strong> ${guessNext().join(", ")}</p>
+        <h3>Tần suất các chữ số (0-9):</h3>
+        <ul>
+          ${Object.entries(freq).sort((a, b) => b[1] - a[1]).map(([digit, count]) => {
+            const excluded = lastDrawTailDigits.includes(Number(digit)) ? " (bỏ qua)" : "";
+            return `<li>${digit}: ${count} lần${excluded}</li>`;
+          }).join("")}
+        </ul>
+        <h3>Phân Tích Chẵn / Lẻ:</h3>
+        <p>Số chẵn: ${evenCount} lần</p>
+        <p>Số lẻ: ${oddCount} lần</p>
+        <p><strong>${chanLeDuDoan}</strong></p>
+        <h3>Gợi Ý Số Đẹp:</h3>
+        <ul>
+          ${niceNumbers.map(num => `<li>${num}</li>`).join("")}
+        </ul>
+      `;
+
+      document.getElementById("output").innerHTML = outputHTML;
+    }
+  </script>
+</body>
+</html>
